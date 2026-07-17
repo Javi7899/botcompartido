@@ -1,0 +1,30 @@
+[project]
+name = "quantbot"
+version = "0.1.0"
+description = "Bot de trading cuantitativo (IBKR, ordenes MOC diarias). Ver docs/ARQUITECTURA.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7",
+    "pydantic-settings>=2.2",
+    "SQLAlchemy>=2.0",
+    "loguru>=0.7",
+    # Base de datos IANA de zonas horarias: imprescindible en Windows, donde
+    # zoneinfo no encuentra America/New_York sin este paquete (spec 1.1).
+    "tzdata>=2024.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["quantbot*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
