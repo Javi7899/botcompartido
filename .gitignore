@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Config local y credenciales (IBKR, APIs, email)
+.env
+.env.*
+*.secret
+credentials*.json
+
+# Bases de datos locales
+*.sqlite
+*.sqlite3
+*.db
+
+# Datos descargados y caches
+data/
+*.parquet
+*.h5
+.cache/
+
+# Logs
+logs/
+*.log
+
+# Testing y herramientas
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE / SO
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
