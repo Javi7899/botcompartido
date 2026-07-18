@@ -20,6 +20,11 @@ conocidas y las decisiones de limpieza tomadas en Fase 2.
   Fase 3 documentada aquí para no olvidarla).
 - **Validación en vivo:** 251 barras/año por ticker, sin NaN, columna
   `Adj Close` presente con `auto_adjust=False, actions=True`.
+- **Cross-validación (2026-07-18):** closes de yfinance contrastados contra
+  la API histórica pública de Nasdaq (últimas ~20 sesiones, tolerancia 1%):
+  AAPL, KO y JPM sin desviaciones. Stooq se descartó como referencia por
+  estar detrás de un challenge JavaScript anti-bot. El VIX de FRED coincide
+  exactamente con el ^VIX de Yahoo en la última fecha compartida.
 
 ## Macro — FRED (`fredgraph.csv`, sin API key)
 
@@ -53,9 +58,14 @@ conocidas y las decisiones de limpieza tomadas en Fase 2.
   (AAPL, AMZN, GOOGL, META, MSFT, NVDA, TSLA) y SPY como referencia pasaron
   todos: OI total 100k-700k por ticker, 0% de IV ausente, strikes rodeando
   el spot, 4 vencimientos próximos.
-- **Pendiente (paso humano):** comparar los totales de OI/IV que imprime el
-  script contra CBOE o IBKR antes de dar por buena la fuente (nivel 1 del
-  spec). El script existe para hacer esa comparación reproducible.
+- **Cross-validación automática (nivel 2.1.6-1, CERRADA el 2026-07-18):**
+  `scripts/cross_validate_sources.py` compara yfinance contra el JSON
+  público de CBOE (cdn.cboe.com). Resultado: OI por vencimiento coincide
+  casi al contrato exacto (ej. NVDA 430.972 vs 430.974; SPY 263.372 vs
+  263.425) e IV ATM a ≥14 días dentro del 6% (SPY exacta: 0.155 = 0.155).
+  La IV de vencimientos sub-semanales NO es comparable entre proveedores
+  (dominada por el timing del snapshot) — por eso la comparación usa el
+  primer vencimiento con ≥14 días de vida.
 - **Limitación conocida:** el OI de yfinance es de cierre de T-1, coherente
   con la arquitectura general, con la limitación de gap intersesión ya
   documentada en el spec 2.1.6.

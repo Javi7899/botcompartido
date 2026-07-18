@@ -14,13 +14,13 @@ Bot de trading cuantitativo para una cuenta de 5.000€ en Interactive Brokers P
 
 ## Estado actual
 
-**Fase 2 implementada, pendiente de aprobación.** Spec de arquitectura v1.1 acordado (con enmiendas). Fuentes de datos validadas en vivo: ver [docs/FUENTES_DATOS.md](docs/FUENTES_DATOS.md).
+**Fase 3 en curso (motor Técnico).** Fase 2 cerrada con cross-validación automática contra fuentes independientes (CBOE, Nasdaq, Yahoo): ver [docs/FUENTES_DATOS.md](docs/FUENTES_DATOS.md).
 
 | Fase | Descripción | Estado |
 |---|---|---|
 | 1 | Infraestructura y Base de Datos | Completada |
-| 2 | Ingesta de Datos y Limpieza | En revisión |
-| 3 | Desarrollo Motor a Motor (7 motores) | Pendiente |
+| 2 | Ingesta de Datos y Limpieza | Completada |
+| 3 | Desarrollo Motor a Motor (7 motores) | En curso — motor 1 (Técnico) |
 | 4 | Meta-Modelo Bayesiano y Correlaciones | Pendiente |
 | 5 | Supervisor IA | Pendiente |
 | 6 | Optimización de Cartera | Pendiente |
