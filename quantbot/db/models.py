@@ -201,6 +201,74 @@ class Fill(Base):
     order: Mapped[BrokerOrder] = relationship(back_populates="fills")
 
 
+class DailyBar(Base):
+    """Daily OHLCV bar (T-1 data, spec section 1). Market-data cache, not
+    trace: rows are inserted once per (ticker, date) and never updated —
+    a re-ingest that disagrees with the stored row raises instead of
+    overwriting (see quantbot.data.ohlcv.store_bars)."""
+
+    __tablename__ = "daily_bars"
+    __table_args__ = (
+        UniqueConstraint("ticker", "bar_date", name="uq_bar_ticker_date"),
+        CheckConstraint(
+            "open_price > 0 AND high_price > 0 AND low_price > 0 "
+            "AND close_price > 0 AND adj_close > 0",
+            name="bar_prices_positive",
+        ),
+        CheckConstraint("high_price >= low_price", name="bar_high_gte_low"),
+        CheckConstraint("volume >= 0", name="bar_volume_non_negative"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ticker: Mapped[str]
+    bar_date: Mapped[str]  # YYYY-MM-DD
+    open_price: Mapped[float]
+    high_price: Mapped[float]
+    low_price: Mapped[float]
+    close_price: Mapped[float]
+    adj_close: Mapped[float]
+    volume: Mapped[int]
+    dividend: Mapped[float] = mapped_column(default=0.0)
+    split_ratio: Mapped[float] = mapped_column(default=0.0)
+    source: Mapped[str]
+    ingested_at_utc: Mapped[str]
+
+
+class MacroObservation(Base):
+    """Macro series observation from FRED (spec section 1: free sources)."""
+
+    __tablename__ = "macro_observations"
+    __table_args__ = (
+        UniqueConstraint("series_id", "obs_date", name="uq_macro_series_date"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    series_id: Mapped[str]
+    obs_date: Mapped[str]  # YYYY-MM-DD
+    value: Mapped[float]
+    ingested_at_utc: Mapped[str]
+
+
+class NewsArticle(Base):
+    """News item with its exact publication timestamp. Append-only: this
+    table IS the point-in-time news archive that makes the news engine
+    evaluable later (spec 0.1 and 1.1) — history must never be rewritten."""
+
+    __tablename__ = "news_items"
+    __table_args__ = (
+        UniqueConstraint("ticker", "link", name="uq_news_ticker_link"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # NULL for macro/market-wide feeds not tied to one ticker.
+    ticker: Mapped[str | None] = mapped_column(default=None)
+    source: Mapped[str]
+    title: Mapped[str] = mapped_column(Text)
+    link: Mapped[str]
+    published_at_utc: Mapped[str]
+    fetched_at_utc: Mapped[str]
+
+
 # Tables protected against UPDATE/DELETE via SQLite triggers (see init_db).
 IMMUTABLE_TABLES: tuple[str, ...] = (
     "engine_predictions",
@@ -208,4 +276,5 @@ IMMUTABLE_TABLES: tuple[str, ...] = (
     "supervisor_decisions",
     "portfolio_targets",
     "fills",
+    "news_items",
 )
