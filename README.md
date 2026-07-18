@@ -20,7 +20,7 @@ Bot de trading cuantitativo para una cuenta de 5.000€ en Interactive Brokers P
 |---|---|---|
 | 1 | Infraestructura y Base de Datos | Completada |
 | 2 | Ingesta de Datos y Limpieza | Completada |
-| 3 | Desarrollo Motor a Motor (7 motores) | En curso — motor 1 (Técnico) |
+| 3 | Desarrollo Motor a Motor (7 motores) | En curso — motor 1 (Técnico) completado: [MARGINAL](docs/BACKTEST_MOTOR_TECNICO.md) |
 | 4 | Meta-Modelo Bayesiano y Correlaciones | Pendiente |
 | 5 | Supervisor IA | Pendiente |
 | 6 | Optimización de Cartera | Pendiente |
