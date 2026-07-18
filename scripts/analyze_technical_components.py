@@ -1,18 +1,20 @@
 """Análisis de componentes del motor Técnico SOLO en desarrollo (< 2022).
 
-Protocolo anti-overfitting: tras el FALLA del compuesto en el backtest
-pre-registrado, la simplificación se elige mirando exclusivamente el
-periodo de desarrollo. El holdout (>= 2022) queda intacto y solo se usará
-UNA vez para confirmar la variante elegida (scripts/backtest_technical.py
-con la variante final). Requiere red.
+Protocolo anti-overfitting: tras el FALLA del compuesto v1 en el backtest
+pre-registrado, la simplificación se eligió mirando exclusivamente el
+periodo de desarrollo. El holdout (>= 2022) quedó intacto y solo se usó
+UNA vez para confirmar la variante elegida (v2 tendencia pura, ver
+docs/BACKTEST_MOTOR_TECNICO.md). Requiere red.
 """
 
 import sys
-from datetime import date
 from math import tanh
 
-import pandas as pd
-
+from quantbot.backtest.runner import (
+    HORIZON,
+    development_only,
+    download_universe_closes,
+)
 from quantbot.backtest.walkforward import evaluate_engine, period_stats
 from quantbot.engines.technical import (
     MIN_BARS,
@@ -23,9 +25,6 @@ from quantbot.engines.technical import (
     momentum_12_1,
     sma,
 )
-from scripts.backtest_technical import SPLIT_DATE, download_universe_closes
-
-HORIZON = 21
 
 
 def trend_score(ticker: str, closes: list[float]) -> float:
@@ -59,14 +58,16 @@ VARIANTS = {
 
 
 def main() -> int:
-    closes = download_universe_closes()
-    # Solo desarrollo: el holdout no se toca en este análisis.
-    development = closes[closes.index < pd.Timestamp(SPLIT_DATE).tz_localize(closes.index.tz)]
+    development = development_only(download_universe_closes())
     print(
         f"Periodo de desarrollo: {development.index[0].date()} -> "
         f"{development.index[-1].date()} ({len(development)} sesiones)"
     )
-    print(f"{'variante':<28} {'fechas':>6} {'IC medio':>9} {'t-stat':>7} {'%IC>0':>6} {'L-S':>8}")
+    header = (
+        f"{'variante':<28} {'fechas':>6} {'IC medio':>9} {'t-stat':>7} "
+        f"{'%IC>0':>6} {'L-S':>8}"
+    )
+    print(header)
     for label, fn in VARIANTS.items():
         results = evaluate_engine(
             development, fn, horizon=HORIZON, min_history=MIN_BARS

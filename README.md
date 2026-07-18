@@ -20,7 +20,19 @@ Bot de trading cuantitativo para una cuenta de 5.000€ en Interactive Brokers P
 |---|---|---|
 | 1 | Infraestructura y Base de Datos | Completada |
 | 2 | Ingesta de Datos y Limpieza | Completada |
-| 3 | Desarrollo Motor a Motor (7 motores) | En curso — motor 1 (Técnico) completado: [MARGINAL](docs/BACKTEST_MOTOR_TECNICO.md) |
+| 3 | Desarrollo Motor a Motor (7 motores) | En curso — 3 de 7 completados |
+
+### Estado de los motores (Fase 3)
+
+| # | Motor | Estado | Veredicto |
+|---|---|---|---|
+| 1 | Técnico | Completado | [MARGINAL](docs/BACKTEST_MOTOR_TECNICO.md) — v2 tendencia SMA200, peso inicial bajo |
+| 2 | Fundamental | Completado | [Live-only](docs/MOTOR_FUNDAMENTAL.md) — sin backtest posible, valida en paper trading |
+| 3 | Series Temporales | Completado | [FALLA — descartado](docs/BACKTEST_MOTOR_SERIES_TEMPORALES.md) de la Fase 4 |
+| 4 | ML (XGBoost) | Pendiente | — |
+| 5 | Insider Trading | Pendiente | — |
+| 6 | GEX | Pendiente | — |
+| 7 | Macro/Noticias | Pendiente | — |
 | 4 | Meta-Modelo Bayesiano y Correlaciones | Pendiente |
 | 5 | Supervisor IA | Pendiente |
 | 6 | Optimización de Cartera | Pendiente |
