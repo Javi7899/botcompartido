@@ -16,6 +16,8 @@ dependencies = [
     "pandas>=2.0",
     "requests>=2.31",
     "feedparser>=6.0",
+    # Fase 3.4: motor ML
+    "xgboost>=2.0",
 ]
 
 [project.optional-dependencies]

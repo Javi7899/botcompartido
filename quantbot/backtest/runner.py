@@ -28,7 +28,10 @@ PASS_T_STAT = 2.0
 MARGINAL_T_STAT = 1.0
 
 
-def download_universe_closes(start: str = START) -> pd.DataFrame:
+def download_universe_data(
+    fields: tuple[str, ...] = ("Adj Close",), start: str = START
+) -> dict[str, pd.DataFrame]:
+    """Wide frames per field (e.g. 'Adj Close', 'Volume') for the universe."""
     import yfinance as yf
 
     print(f"Descargando {len(UNIVERSE)} tickers desde {start}...")
@@ -41,13 +44,22 @@ def download_universe_closes(start: str = START) -> pd.DataFrame:
         progress=False,
         threads=True,
     )
-    adj = df["Adj Close"]
-    missing = [
-        t for t in UNIVERSE if t not in adj.columns or adj[t].dropna().empty
-    ]
-    if missing:
-        raise RuntimeError(f"tickers sin datos: {missing}")
-    return adj[list(UNIVERSE)]
+    result: dict[str, pd.DataFrame] = {}
+    for field in fields:
+        frame = df[field]
+        missing = [
+            t
+            for t in UNIVERSE
+            if t not in frame.columns or frame[t].dropna().empty
+        ]
+        if missing:
+            raise RuntimeError(f"tickers sin datos de {field}: {missing}")
+        result[field] = frame[list(UNIVERSE)]
+    return result
+
+
+def download_universe_closes(start: str = START) -> pd.DataFrame:
+    return download_universe_data(("Adj Close",), start)["Adj Close"]
 
 
 def development_only(closes: pd.DataFrame) -> pd.DataFrame:
@@ -86,25 +98,15 @@ VERDICT_TEXT = {
 }
 
 
-def run_price_engine_backtest(
+def write_markdown_report(
     *,
-    engine_label: str,
-    score_fn: Callable[[str, list[float]], float],
-    min_history: int,
+    report: WalkForwardReport,
+    final: str,
     report_title: str,
     report_path: str,
     design_notes: list[str] | None = None,
-) -> tuple[WalkForwardReport, str]:
-    """Run the standard backtest, write the markdown report, return both."""
-    closes = download_universe_closes()
-    results = evaluate_engine(
-        closes, score_fn, horizon=HORIZON, min_history=min_history
-    )
-    report = split_report(
-        engine_label, results, horizon=HORIZON, split_date=SPLIT_DATE
-    )
-    final = verdict(report.holdout.mean_ic, report.holdout.t_stat)
-
+) -> str:
+    """Render the standard verdict report and write it to disk."""
     lines = [
         f"# {report_title}",
         "",
@@ -140,4 +142,32 @@ def run_price_engine_backtest(
     with open(report_path, "w", encoding="utf-8") as handle:
         handle.write(markdown)
     print(markdown)
+    return markdown
+
+
+def run_price_engine_backtest(
+    *,
+    engine_label: str,
+    score_fn: Callable[[str, list[float]], float],
+    min_history: int,
+    report_title: str,
+    report_path: str,
+    design_notes: list[str] | None = None,
+) -> tuple[WalkForwardReport, str]:
+    """Run the standard backtest, write the markdown report, return both."""
+    closes = download_universe_closes()
+    results = evaluate_engine(
+        closes, score_fn, horizon=HORIZON, min_history=min_history
+    )
+    report = split_report(
+        engine_label, results, horizon=HORIZON, split_date=SPLIT_DATE
+    )
+    final = verdict(report.holdout.mean_ic, report.holdout.t_stat)
+    write_markdown_report(
+        report=report,
+        final=final,
+        report_title=report_title,
+        report_path=report_path,
+        design_notes=design_notes,
+    )
     return report, final
