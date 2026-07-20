@@ -1,6 +1,6 @@
 # Construcción Paso a Paso de Bot Cuantitativo
 
-> **Versión 1.1** — Documento original + Enmiendas acordadas (ver sección final).
+> **Versión 1.2** — Documento original + Enmiendas v1.1 y v1.2 (ver sección final).
 > Este documento es la **fuente de verdad** de la arquitectura del proyecto.
 
 Rol de referencia: Ingeniero de Software Cuantitativo Senior experto en Python, arquitecturas limpias orientadas a eventos, estadística bayesiana, optimización de carteras y automatización con la API de Interactive Brokers (`ib_insync` / `ib_async`).
@@ -23,13 +23,15 @@ Para evitar que la Capa 2.1, la Fase 3 y la sección 0.1 se desalineen entre sí
 | 2 | Fundamental | Ratios y métricas financieras | T-1, con mitigación explícita de look-ahead bias (ver 1.1) | Reducido — ver 0.1 |
 | 3 | Series Temporales | Serie histórica de precios (ARIMA/Prophet) | T-1 (cierre oficial) | Sí |
 | 4 | Machine Learning (XGBoost) | Features derivadas de datos T-1 | T-1 | Sí |
-| 5 | Insider Trading | Form 4 SEC (EDGAR) | T-1, con delay de reporte de hasta 2 días hábiles | Sí |
-| 6 | GEX (Gamma Exposure) | Cadena de opciones (OI, IV) vía yfinance | T-1 (OI de cierre del día anterior) | Sí |
+| 5 | Insider Trading | Form 4 SEC (EDGAR) | T-1, con delay de reporte de hasta 2 días hábiles | Live-only — ver 0.1 y Enmienda v1.2 |
+| 6 | GEX (Gamma Exposure) | Cadena de opciones (OI, IV) vía yfinance | T-1 (OI de cierre del día anterior) | Live-only — ver 0.1 y Enmienda v1.2 |
 | 7 | Macro y Noticias (NLP) | RSS/APIs de noticias, contexto macro | Tiempo real hasta el momento exacto de ejecución (excepción explícita, ver 1) | Reducido — ver 0.1 |
 
 El orden de construcción en Fase 3 sigue esta misma tabla de arriba a abajo.
 
 > **Nota (Enmienda 5):** el motor de Reinforcement Learning (PPO + TimeGAN) que figuraba como motor 8 en la versión 1.0 queda **eliminado del alcance del proyecto**. Se documenta como posible extensión futura, condicionada a que el resto del sistema lleve tiempo validado en real y a una decisión explícita nueva.
+
+> **Nota (Enmienda v1.2):** los motores Insider (5) y GEX (6) pasan a **live-only** — su régimen de backtest de la v1.1 ("Sí") era inviable: ni las cadenas de opciones históricas (OI/IV por día) ni el histórico masivo de Form 4 están disponibles en fuentes gratuitas con la granularidad point-in-time necesaria. Ambos reciben el tratamiento de la sección 0.1 (peso inicial conservador, persistencia diaria, validación en paper trading). Además, la Enmienda v1.2 corrige la convención de signo del cálculo GEX (ver 2.1.6). Resultado empírico de la Fase 3: **de los 4 motores backtesteables (Técnico, Series Temporales, ML, y GEX/Insider que resultaron no serlo), solo el Técnico superó el gate out-of-sample (MARGINAL); Series Temporales y ML fueron descartados.** El sistema se apoya por tanto en los motores de información no-precio (Insider, GEX, Noticias, Fundamental) y en la gestión de cartera.
 
 ## 0.1 Motores sin backtest histórico riguroso viable (Noticias y Fundamentales point-in-time)
 
@@ -83,7 +85,7 @@ Cada motor se construye y prueba de forma aislada (Fase 3), en el orden y con el
 6. **GEX (Gamma Exposure):** Mide la exposición gamma de los market makers de opciones sobre el activo, para detectar zonas de "pinning" (baja volatilidad esperada) o posible aceleración de movimiento (gamma negativa). Decisiones de diseño:
    - Se calcula únicamente sobre un **subconjunto reducido de tickers** (5-10 blue chips con mayor liquidez de opciones, ej. las tecnológicas grandes), no sobre los 30-40, dado el límite de fuentes de datos gratuitas.
    - Cálculo propio (no API de terceros): descarga de cadena de opciones vía `yfinance` (OI, IV por strike y vencimiento) y cálculo de gamma vía Black-Scholes.
-   - Fórmula base: gamma exposure por strike = OI × gamma (Black-Scholes) × precio del subyacente × multiplicador de contrato, con el signo asignado según la convención estándar de mercado (dealers cortos de calls que compran los clientes, largos de puts que venden los clientes).
+   - Fórmula base: gamma exposure por strike = OI × gamma (Black-Scholes) × precio del subyacente² × multiplicador de contrato × 0.01 (USD por movimiento de 1% del subyacente). **Convención de signo (CORREGIDA en Enmienda v1.2):** la convención estándar de mercado (SqueezeMetrics y la mayoría de herramientas públicas) asume dealers **largos de calls** (los clientes venden covered calls) y **cortos de puts** (los clientes compran protección); por tanto las calls aportan gamma **positiva** al dealer y las puts **negativa**. La v1.1 tenía esta convención invertida, lo que habría hecho que la validación cruzada contra herramientas públicas (nivel 3 abajo) comparara signos opuestos; queda corregida.
    - Los datos de open interest son de cierre del día anterior (coherente con la arquitectura T-1 general), y el cálculo es una **estimación basada en convenciones**, no una medición exacta. **Limitación adicional a documentar:** al usar OI de T-1 sobre el precio del subyacente en T, un movimiento de precio significativo entre el cierre anterior y la sesión en curso puede desplazar el spot fuera de la zona de strikes donde el OI de T-1 sigue siendo representativo, especialmente en blue chips muy líquidas donde el gap intersesión puede ser relevante — el motor debe dejar constancia de esto como limitación conocida, no solo de la naturaleza convencional del cálculo de gamma.
    - Para tickers fuera del subconjunto de opciones líquidas, el motor devuelve un score neutro (0) o se excluye de la ponderación bayesiana para ese activo.
    - **Validación obligatoria antes de dar el motor por bueno (Fase 3), en cuatro niveles:**
@@ -175,3 +177,47 @@ Decisiones acordadas tras la revisión del documento original. Ya están integra
 5. **Motor RL (PPO + TimeGAN) eliminado.** Coste de desarrollo y fragilidad altísimos, valor esperado ≈ 0 con este capital y estas fuentes de datos. Queda fuera del alcance; solo se revisitaría con el sistema completo validado en real y una decisión explícita nueva. El sistema queda en **7 motores**.
 6. **Expectativa de comisiones documentada.** El mínimo de $1/orden hace que el filtro 3x bloquee ajustes pequeños por diseño; el sistema tenderá a baja rotación. Comportamiento esperado, no bug. Con 5.000€ este es un sistema de aprendizaje y validación de proceso, no de renta.
 7. **Supervisor LLM no backtesteable.** Recibe el mismo tratamiento que la sección 0.1: su validación es el paper trading, con prompt versionado y persistencia inmutable (ya previstas en la Capa 2.3).
+
+---
+
+## ENMIENDAS v1.2 (Fase 3, motores de información, 2026-07-20)
+
+Decisiones tomadas durante la construcción de los motores 5-7. Ya están
+integradas arriba (tabla 0.0 y sección 2.1.6).
+
+1. **Insider y GEX pasan a live-only.** El régimen de backtest "Sí" de la
+   v1.1 era inviable: las cadenas de opciones históricas (OI/IV por día) y
+   el histórico masivo de Form 4 point-in-time no están disponibles en
+   fuentes gratuitas. Ambos reciben el tratamiento de la sección 0.1
+   (peso inicial conservador, persistencia diaria, validación en paper
+   trading), igual que Fundamental y Noticias. Detalle en
+   `docs/MOTOR_INSIDER.md` y `docs/MOTOR_GEX.md`.
+2. **Corrección de la convención de signo GEX.** La v1.1 asumía dealers
+   cortos de calls / largos de puts; la convención estándar de las
+   herramientas públicas (contra las que exige comparar el nivel 3 de
+   validación del propio spec) es la contraria: dealers largos de calls
+   (gamma +) y cortos de puts (gamma −). Corregido en el código y en 2.1.6.
+3. **User-Agent de la SEC configurable.** EDGAR devuelve HTTP 403 sin un
+   User-Agent con contacto real; se añade `QUANTBOT_SEC_USER_AGENT` a la
+   config (fallo ruidoso con placeholder por defecto) para no fijar un
+   email en el repositorio.
+
+### Balance de la Fase 3 (motores completados)
+
+| # | Motor | Veredicto | Integración en Fase 4 |
+|---|---|---|---|
+| 1 | Técnico | MARGINAL (backtest) | Sí, peso inicial bajo |
+| 2 | Fundamental | Live-only | Sí, peso inicial conservador |
+| 3 | Series Temporales | FALLA (backtest) | **No — descartado** |
+| 4 | ML (XGBoost/Ridge) | FALLA (backtest) | **No — descartado** |
+| 5 | Insider | Live-only | Sí, peso inicial conservador |
+| 6 | GEX | Live-only | Sí, peso inicial conservador |
+| 7 | Noticias | Live-only | Sí, peso inicial conservador |
+
+Lección empírica central: los tres motores puramente de **precio** que sí
+eran backtesteables (Técnico, Series Temporales, ML) mostraron el mismo
+patrón — señal en 2012-2021, degradación en 2022-2026. Solo el Técnico
+sobrevivió, y marginalmente. El peso del sistema recaerá en los motores de
+**información no-precio** (Insider, GEX, Noticias, Fundamental), cuya
+validación real llegará con el paper trading (Fase 8), y en la capa de
+gestión de cartera (Black-Litterman + Kelly + filtro de comisiones).

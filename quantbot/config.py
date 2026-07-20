@@ -34,6 +34,13 @@ class AppConfig(BaseSettings):
     log_dir: Path = Path("logs")
     log_level: LogLevel = "INFO"
 
+    # La SEC exige un User-Agent con un contacto real (formato
+    # "nombre contacto email"); rechaza con HTTP 403 los genéricos.
+    # Se configura vía QUANTBOT_SEC_USER_AGENT para no fijar un email en el
+    # repo. El default es un placeholder que la SEC rechazará hasta que se
+    # ponga un contacto real (fallo ruidoso, no silencioso).
+    sec_user_agent: str = "botcompartido quantbot contacto@example.com"
+
 
 def load_config() -> AppConfig:
     """Build the config from environment/.env; raises ValidationError on bad values."""

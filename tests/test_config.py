@@ -18,6 +18,13 @@ def test_market_timezone_is_new_york() -> None:
     assert MARKET_TIMEZONE == "America/New_York"
 
 
+def test_sec_user_agent_configurable(monkeypatch: pytest.MonkeyPatch) -> None:
+    default = AppConfig(_env_file=None)
+    assert "@" in default.sec_user_agent  # formato con email de contacto
+    monkeypatch.setenv("QUANTBOT_SEC_USER_AGENT", "acme research a@b.com")
+    assert AppConfig(_env_file=None).sec_user_agent == "acme research a@b.com"
+
+
 def test_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("QUANTBOT_LOG_LEVEL", "DEBUG")
     monkeypatch.setenv("QUANTBOT_ENVIRONMENT", "paper")

@@ -20,25 +20,27 @@ Bot de trading cuantitativo para una cuenta de 5.000€ en Interactive Brokers P
 |---|---|---|
 | 1 | Infraestructura y Base de Datos | Completada |
 | 2 | Ingesta de Datos y Limpieza | Completada |
-| 3 | Desarrollo Motor a Motor (7 motores) | En curso — 4 de 7 completados |
-
-### Estado de los motores (Fase 3)
-
-| # | Motor | Estado | Veredicto |
-|---|---|---|---|
-| 1 | Técnico | Completado | [MARGINAL](docs/BACKTEST_MOTOR_TECNICO.md) — v2 tendencia SMA200, peso inicial bajo |
-| 2 | Fundamental | Completado | [Live-only](docs/MOTOR_FUNDAMENTAL.md) — sin backtest posible, valida en paper trading |
-| 3 | Series Temporales | Completado | [FALLA — descartado](docs/BACKTEST_MOTOR_SERIES_TEMPORALES.md) de la Fase 4 |
-| 4 | ML (XGBoost) | Completado | [FALLA — descartado](docs/BACKTEST_MOTOR_ML.md) de la Fase 4 (v2 Ridge tampoco confirma en holdout) |
-| 5 | Insider Trading | Pendiente | — |
-| 6 | GEX | Pendiente | — |
-| 7 | Macro/Noticias | Pendiente | — |
+| 3 | Desarrollo Motor a Motor (7 motores) | **Completada — 7 de 7** |
 | 4 | Meta-Modelo Bayesiano y Correlaciones | Pendiente |
 | 5 | Supervisor IA | Pendiente |
 | 6 | Optimización de Cartera | Pendiente |
 | 7 | Ejecución MOC (IBKR) | Pendiente |
 | 8 | Paper Trading (mín. 6 meses) | Pendiente |
 | 9 | Capital Real | Pendiente |
+
+### Estado de los motores (Fase 3)
+
+| # | Motor | Veredicto | Integración en Fase 4 |
+|---|---|---|---|
+| 1 | Técnico | [MARGINAL](docs/BACKTEST_MOTOR_TECNICO.md) — v2 tendencia SMA200 | Sí, peso inicial bajo |
+| 2 | Fundamental | [Live-only](docs/MOTOR_FUNDAMENTAL.md) — sin backtest posible | Sí, peso conservador |
+| 3 | Series Temporales | [FALLA](docs/BACKTEST_MOTOR_SERIES_TEMPORALES.md) — descartado | No |
+| 4 | ML (XGBoost/Ridge) | [FALLA](docs/BACKTEST_MOTOR_ML.md) — descartado | No |
+| 5 | Insider Trading | [Live-only](docs/MOTOR_INSIDER.md) — Form 4/EDGAR | Sí, peso conservador |
+| 6 | GEX | [Live-only](docs/MOTOR_GEX.md) — gamma Black-Scholes | Sí, peso conservador |
+| 7 | Macro/Noticias | [Live-only](docs/MOTOR_NOTICIAS.md) — léxico financiero | Sí, peso conservador |
+
+Lección de la Fase 3: los 3 motores de precio backtesteables (Técnico, Series Temporales, ML) mostraron señal en 2012-2021 y degradación en 2022-2026; solo el Técnico sobrevivió, marginalmente. El sistema se apoyará en los motores de información no-precio (Insider, GEX, Noticias, Fundamental) y en la gestión de cartera.
 
 ## Reglas de desarrollo
 
