@@ -18,6 +18,8 @@ dependencies = [
     "feedparser>=6.0",
     # Fase 3.4: motor ML
     "xgboost>=2.0",
+    # Fase 5: supervisor LLM
+    "anthropic>=0.40",
 ]
 
 [project.optional-dependencies]
@@ -31,6 +33,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["quantbot*"]
+
+[tool.setuptools.package-data]
+"quantbot.supervisor.prompts" = ["*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -41,6 +41,11 @@ class AppConfig(BaseSettings):
     # ponga un contacto real (fallo ruidoso, no silencioso).
     sec_user_agent: str = "botcompartido quantbot contacto@example.com"
 
+    # Modelo LLM del supervisor (Capa 2.3). Se persiste con cada decisión;
+    # cambiarlo invalida los backtests del supervisor (que no existen: se
+    # valida en paper trading, Enmienda 7).
+    supervisor_model: str = "claude-opus-4-8"
+
 
 def load_config() -> AppConfig:
     """Build the config from environment/.env; raises ValidationError on bad values."""
