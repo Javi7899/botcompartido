@@ -44,9 +44,20 @@ Sin esto el sistema no funcionaba: Kelly despliega típicamente ~23% de los
 $5.000 (≈$1.167); repartido entre 15 posiciones fijas da $78 cada una —
 menos que el precio de una sola acción de casi cualquier blue chip. En la
 primera ejecución de la simulación **todas las posiciones salían no
-invertibles y se generaban cero órdenes**. Derivando el número (≈3-5
+invertibles y se generaban cero órdenes**. Derivando el número (≈2-5
 posiciones de $300-400) el sistema concentra el capital desplegable en las
 mejores señales, que es justo lo que la Enmienda 1 pretendía.
+
+Dividir por el mínimo tampoco basta por sí solo, porque el **redondeo** a
+acciones enteras puede dejar la posición por debajo del mínimo aunque la
+asignación lo supere (una asignación de $383 en un título de $200 compra 1
+acción = $200 < $300). Por eso el número se reduce iterativamente hasta que
+**todas** las posiciones seleccionadas son viables.
+
+`round_to_shares` devuelve un `SizingResult` con dos listas: `positions`
+(las que se compran, todas invertibles) y `excluded` (las descartadas con
+el motivo exacto), preservando la trazabilidad de por qué cada candidato
+quedó fuera.
 
 ## Filtro de Comisiones (`commissions.py`) — decisión del nivel de aplicación
 
@@ -60,8 +71,8 @@ sobre precios reales del universo (2024-01 → 2026-07, rebalanceo mensual,
 
 | Variante | Rebalanceos | Órdenes | Comisiones | Turnover | Com./capital |
 |---|---|---|---|---|---|
-| individual | 18 | 15 | $15.00 | $5.365 | 0.30% |
-| aggregate | 18 | 15 | $15.00 | $5.392 | 0.30% |
+| individual | 18 | 28 | $28.00 | $14.127 | 0.56% |
+| aggregate | 18 | 28 | $28.00 | $14.127 | 0.56% |
 
 **Decisión: INDIVIDUAL** (por defecto). Las dos variantes convergen porque
 la cartera que impone la aritmética de $5.000 es tan concentrada (3-5
@@ -72,8 +83,10 @@ variante más simple y conservadora: nunca ejecuta un ajuste que no se
 justifique por sí mismo. `AGGREGATE` queda implementada y testeada por si
 un cambio futuro de capital o de nº de posiciones la hace relevante.
 
-**Coste confirmado:** 0.30% del capital en 2,5 años de comisiones, con ~15
-órdenes. La baja rotación que anticipaba la Enmienda 6 se cumple.
+**Coste confirmado:** 0.56% del capital en 2,5 años de comisiones, con 28
+órdenes (≈11 al año). La baja rotación que anticipaba la Enmienda 6 se
+cumple: el mínimo de $1 por orden es el 100% de la comisión pagada en cada
+operación, y aun así el coste total queda por debajo del 0.6% del capital.
 
 > La simulación mide **coste y frecuencia de operación, no rentabilidad**:
 > los motores de precio ya fallaron su gate en Fase 3 y los scores usados

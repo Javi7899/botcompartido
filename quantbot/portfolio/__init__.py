@@ -14,12 +14,17 @@ from quantbot.portfolio.commissions import (
     ibkr_commission,
 )
 from quantbot.portfolio.kelly import fractional_kelly_scale
-from quantbot.portfolio.sizing import TargetPosition, round_to_shares
+from quantbot.portfolio.sizing import (
+    SizingResult,
+    TargetPosition,
+    round_to_shares,
+)
 
 __all__ = [
     "CommissionFilter",
     "FilterMode",
     "RebalanceDecision",
+    "SizingResult",
     "TargetPosition",
     "black_litterman_weights",
     "fractional_kelly_scale",

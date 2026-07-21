@@ -62,13 +62,13 @@ def simulate(closes: pd.DataFrame, mode: FilterMode) -> dict:
         if weights.sum() <= 0:
             continue
         exposure = fractional_kelly_scale(0.04, float(np.mean(np.diag(cov))))
-        targets = round_to_shares(
+        sized = round_to_shares(
             dict(zip(tickers, weights)), prices, CAPITAL, exposure=exposure
         )
 
         portfolio_value = CAPITAL
         decisions = []
-        target_map = {p.ticker: p.shares for p in targets if p.investable}
+        target_map = {p.ticker: p.shares for p in sized.positions}
         for ticker in set(list(holdings) + list(target_map)):
             price = prices.get(ticker)
             if price is None:
