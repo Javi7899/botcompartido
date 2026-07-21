@@ -23,7 +23,7 @@ Bot de trading cuantitativo para una cuenta de 5.000€ en Interactive Brokers P
 | 3 | Desarrollo Motor a Motor (7 motores) | **Completada — 7 de 7** |
 | 4 | Meta-Modelo Bayesiano y Correlaciones | [Completada](docs/FASE4_META_MODELO.md) |
 | 5 | Supervisor IA | [Completada](docs/FASE5_SUPERVISOR.md) |
-| 6 | Optimización de Cartera | Pendiente |
+| 6 | Optimización de Cartera | [Completada](docs/FASE6_CARTERA.md) |
 | 7 | Ejecución MOC (IBKR) | Pendiente |
 | 8 | Paper Trading (mín. 6 meses) | Pendiente |
 | 9 | Capital Real | Pendiente |
